@@ -325,6 +325,11 @@ function Update-Package {
             $msg | result
 
             $package.NuspecXml.package.metadata.version = $package.RemoteVersion.ToString()
+
+            if ($isLinux -or $IsMacOS) {
+                $package.NuspecXml.package.files.file | ForEach-Object { $_.src = $_.src -replace "\\", "/" }
+            }
+
             $package.SaveNuspec()
             if ($global:Latest.Stream) {
                 $package.UpdateStream($global:Latest.Stream, $package.RemoteVersion)
