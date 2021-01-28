@@ -254,6 +254,7 @@ function Update-Package {
             update_files
             if (Test-Path Function:\au_AfterUpdate) { 'Running au_AfterUpdate' | result; au_AfterUpdate $package | result }
         
+            Get-Item *.nupkg | Remove-Item -ea 0
             choco pack --limit-output | result
             if ($LastExitCode -ne 0) { throw "Choco pack failed with exit code $LastExitCode" }
         } finally {
