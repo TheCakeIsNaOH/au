@@ -333,21 +333,26 @@ function Update-Package {
         $sr = au_SearchReplace
         $sr.Keys | ForEach-Object {
             $fileName = $_
+            if ($isLinux -or $isMacOs){
+                $fileNameFull = (Get-ChildItem -Recurse).fullname | Where-Object { $_ -ieq (Join-Path (Resolve-Path .) $fileName) }
+            } else {
+                $filenameFull = (Get-Item $fileName).FullName
+            }
             "  $fileName" | result
 
             # If not specifying UTF8 encoding, then UTF8 without BOM encoded files
             # is detected as ANSI
-            $fileContent = Get-Content $fileName -Encoding UTF8
+            $fileContent = Get-Content $fileNameFull -Encoding UTF8
             $sr[ $fileName ].GetEnumerator() | ForEach-Object {
                 ('    {0,-35} = {1}' -f $_.name, $_.value) | result
                 if (!($fileContent -match $_.name)) { throw "Search pattern not found: '$($_.name)'" }
                 $fileContent = $fileContent -replace $_.name, $_.value
             }
 
-            $useBomEncoding = if ($fileName.EndsWith('.ps1')) { $true } else { $false }
+            $useBomEncoding = if ($fileNameFull.EndsWith('.ps1')) { $true } else { $false }
             $encoding = New-Object System.Text.UTF8Encoding($useBomEncoding)
             $output = $fileContent | Out-String
-            [System.IO.File]::WriteAllText((Get-Item $fileName).FullName, $output, $encoding)
+            [System.IO.File]::WriteAllText($fileNameFull, $output, $encoding)
         }
     }
 
